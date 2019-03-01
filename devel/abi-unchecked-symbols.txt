@@ -1,3 +1,0 @@
-GNUTLS_PRIVATE:
- All symbols skipped they are private.
-

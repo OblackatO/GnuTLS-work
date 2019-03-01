@@ -1,1 +1,0 @@
-.././openssl/crypto/perlasm/x86nasm.pl
