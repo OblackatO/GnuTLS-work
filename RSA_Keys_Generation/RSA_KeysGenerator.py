@@ -73,7 +73,6 @@ def generate_keys(key_size: int):
     
 
 def main():
-    
     generate_keys(512)
     generate_keys(1024)
     generate_keys(2048)
