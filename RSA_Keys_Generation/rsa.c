@@ -94,8 +94,6 @@ int main() {
   const unsigned int size2 = 1024;
   const unsigned int size3 = 2048;
 
-  generation_flow(size1);
-  
   for(int i=0; i<1000000; i++){
     if(i == 10000){
       printf("[>]10k 512-bit keys generated.");
