@@ -26,7 +26,7 @@ static void print_hex_datum(FILE * outfile, gnutls_datum_t * dat)
 }
 
 //Print rsa key function
-void print_rsa_pkey(FILE * outfile, int id, float time, 
+void print_rsa_pkey(FILE * outfile, int id, long time, 
                                     gnutls_datum_t * n, gnutls_datum_t * e,
                                     gnutls_datum_t * p, gnutls_datum_t * q,
                                     gnutls_datum_t * d) {
@@ -49,8 +49,9 @@ void print_rsa_pkey(FILE * outfile, int id, float time,
     fprintf(outfile, ";");
     fprintf(outfile, ";");
   }
-  fprintf(outfile, "%f", time);
+  fprintf(outfile, "%ld", time);
 }
+
 
 void generation_flow(int key_size)
 {
@@ -65,10 +66,13 @@ void generation_flow(int key_size)
   ret = gnutls_privkey_init(&privkey);
   checkRet(ret, "init");
   
-  clock_t start = clock();
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  long t1 = (long)ts.tv_nsec;
   ret = gnutls_privkey_generate(privkey, GNUTLS_PK_RSA, key_size, 0); //Generate RSA key pair
-  clock_t end = clock();
-  float nanoseconds = (float)(end - start) * pow(10, 9);
+  timespec_get(&ts, TIME_UTC);
+  long t2 = (long)ts.tv_nsec;
+  long nanoseconds = (t2 -t1);
   checkRet(ret, "generating");
 
   //Export RSA key pair
