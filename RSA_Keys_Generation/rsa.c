@@ -7,7 +7,7 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/abstract.h>
 
-int ID = 0;
+int ID = 1;
 
 //Check return value
 void checkRet(int ret, char* function) {
@@ -26,7 +26,7 @@ static void print_hex_datum(FILE * outfile, gnutls_datum_t * dat)
 }
 
 //Print rsa key function
-void print_rsa_pkey(FILE * outfile, int id, long time, 
+void print_rsa_pkey(FILE * outfile, int id, long long time, 
                                     gnutls_datum_t * n, gnutls_datum_t * e,
                                     gnutls_datum_t * p, gnutls_datum_t * q,
                                     gnutls_datum_t * d) {
@@ -49,11 +49,11 @@ void print_rsa_pkey(FILE * outfile, int id, long time,
     fprintf(outfile, ";");
     fprintf(outfile, ";");
   }
-  fprintf(outfile, "%ld", time);
+  fprintf(outfile, "%lld", time);
 }
 
 
-void generation_flow(int key_size)
+void generation_flow(FILE *handle, int key_size)
 {
   /*
   The code on this function was the code in the main 
@@ -68,11 +68,13 @@ void generation_flow(int key_size)
   
   struct timespec ts;
   timespec_get(&ts, TIME_UTC);
-  long t1 = (long)ts.tv_nsec;
+  long long t1 = (long long)ts.tv_nsec;
+  long long ts1 = (long long)ts.tv_sec;
   ret = gnutls_privkey_generate(privkey, GNUTLS_PK_RSA, key_size, 0); //Generate RSA key pair
   timespec_get(&ts, TIME_UTC);
-  long t2 = (long)ts.tv_nsec;
-  long nanoseconds = (t2 -t1);
+  long long t2 = (long long)ts.tv_nsec;
+  long long ts2 = (long long)ts.tv_sec;
+  long long nanoseconds = ((ts2*1000000000+t2)-(ts1*1000000000+t1));
   checkRet(ret, "generating");
 
   //Export RSA key pair
@@ -80,14 +82,7 @@ void generation_flow(int key_size)
   ret = gnutls_privkey_export_rsa_raw(privkey, &n, &e, &d, &p, &q, &u, &e1, &e2);
   checkRet(ret, "export rsa");
 
-  char file_name[15];
-  char keysize_str[12]; sprintf(keysize_str, "%d", key_size);
-  strcpy(file_name, keysize_str);
-  strcat(file_name, "_keys.csv");
-
-  FILE *generated_keys = fopen(file_name, "a");
-  print_rsa_pkey(generated_keys, ID++, nanoseconds, &n, &e, &p, &q, &d);
-  fclose(generated_keys);
+  print_rsa_pkey(handle, ID++, nanoseconds, &n, &e, &p, &q, &d);
 
   //Free private key
   gnutls_privkey_deinit(privkey);
@@ -98,7 +93,9 @@ int main() {
   const unsigned int size2 = 1024;
   const unsigned int size3 = 2048;
 
-  for(int i=0; i<1000000; i++){
+  FILE *generated_keys = fopen("512.csv", "w");
+  fprintf(generated_keys, "id;n;e;p;q;d;t1;\n");
+  for(int i=1; i<=1000000; i++){
     if(i == 10000){
       printf("[>]10k 512-bit keys generated.");
     }else if(i == 100000){
@@ -108,27 +105,34 @@ int main() {
     }else if(i == 800000){
       printf("[>]800k 512-bit keys generated");
     }
-    generation_flow(size1);
+    generation_flow(generated_keys, size1);
   }
-  ID = 0;
+  fclose(generated_keys);
+  ID = 1;
 
-  for(int i=0; i<10000; i++){
+  generated_keys = fopen("1024.csv", "w");
+  fprintf(generated_keys, "id;n;e;p;q;d;t1;\n");
+  for(int i=1; i<=10000; i++){
     if(i == 3000){
       printf("[>]3k 1024-bit 2048-bit keys generated");
     }else if(i == 8000){
       printf("[>]8k 1024-bit 2048-bit keys generated");
     }
-    generation_flow(size2);
+    generation_flow(generated_keys, size2);
   }
-  ID = 0;
+  fclose(generated_keys);
+  ID = 1;
 
-  for(int i=0; i<10000; i++){
+  generated_keys = fopen("2048.csv", "w");
+  fprintf(generated_keys, "id;n;e;p;q;d;t1;\n");
+  for(int i=1; i<=10000; i++){
     if(i == 3000){
       printf("[>]3k 1024-bit 2048-bit keys generated");
     }else if(i == 8000){
       printf("[>]8k 1024-bit 2048-bit keys generated");
     }
-    generation_flow(size3);
+    generation_flow(generated_keys, size3);
   }
+  fclose(generated_keys);
   return 0;
 }
