@@ -1,0 +1,34 @@
+1st: Private key structure is init with:
+gnutls_privkey_init
+
+2nd: Private key is generated:
+gnutls_privkey_generate(...)[1] -> gnutls_x509_privkey_generate2(...)[2] ->
+desired encryption algorithm is check with several if conditions -> 
+_gnutls_pk_generate_keys[3] -> ... 
+
+[1]: https://github.com/psekan/gnutls/blob/master/lib/privkey.c
+[2]: https://github.com/psekan/gnutls/blob/master/lib/x509/privkey.c
+[3]: CANNOT find implementation of this function, but I was able to find this:
+"""
+extern gnutls_crypto_pk_st _gnutls_pk_ops;
+....
+#define _gnutls_pk_generate_keys( algo, bits, params, temporal) _gnutls_pk_ops.generate_keys( algo, bits, params, temporal)
+"""
+at the beginning of this file: https://github.com/psekan/gnutls/blob/master/lib/pk.h 
+
+It is true that I have no way to know where the private attributes of the key
+are generated, BUT, I was able to find some functions(such as this one: _rsa_generate_fips186_4_keypair) under the nettle folder 
+of the repository that seem to do exactly that:
+https://github.com/psekan/gnutls/blob/master/lib/nettle/int/rsa-keygen-fips186.c
+
+Within the folder of this file there are also some other files, such as this one: 
+https://github.com/psekan/gnutls/blob/master/lib/nettle/int/provable-prime.c that might 
+contain some useful information. 
+
+To conclude, I would love to find where the implementation of the "_gnutls_pk_generate_keys"
+function is, because maybe it will lead to the place where the nettle functions are called.
+
+P.S: I had no idea that C had such a keywork: "extern"
+
+
+
