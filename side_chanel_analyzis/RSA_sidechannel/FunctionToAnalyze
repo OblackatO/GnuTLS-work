@@ -1,0 +1,6 @@
+
+rsa_sha256_sign() -- gnutls_privkey_sign_data
+
+rsa_sha256_sign_digest() -- gnutls_privkey_sign_hash
+
+rsa_decrypt() -- gnutls_privkey_decrypt_data/gnutls_privkey_decrypt_data2 
