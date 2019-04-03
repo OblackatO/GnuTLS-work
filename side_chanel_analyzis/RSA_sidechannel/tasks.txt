@@ -1,0 +1,25 @@
+WHAT i have:
+
+rsa_sha256_sign() -- gnutls_privkey_sign_data:
+Signed HHWData with key x
+Signed LHWData with key x
+
+
+WHAT I need:
+
+  //SIGNING HASHED DATA function, in the next two loops.
+  gnutls_datum_t low_hashed_data = rsa_data_sign(GNUTLS_DIG_SHA256, 0, &low_hamming_data, FALSE, FALSE, FALSE, NULL);
+  FILE *output_file = fopen("LHWData_HashedDataSign_keyX.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    rsa_hashedata_sign(&low_hashed_data, GNUTLS_DIG_SHA256, 0, FALSE, FALSE, output_file); 
+  };
+  fclose(output_file);
+
+  gnutls_datum_t high_hashed_data = rsa_data_sign(GNUTLS_DIG_SHA256, 0, &high_hamming_data, FALSE, FALSE, FALSE, NULL);
+  output_file = fopen("HHWData_HashedDataSign_keyX.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    rsa_hashedata_sign(&high_hashed_data, GNUTLS_DIG_SHA256, 0, FALSE, FALSE, output_file);  
+  };
+  fclose(output_file);
+
+  decrypting data for this part as well.

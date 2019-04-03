@@ -1,0 +1,72 @@
+
+  /***decrypt low and high hamming of data with random key*****/
+  gnutls_free(out.data); 
+  gnutls_pubkey_encrypt_data(pubkey, 0, &high_hamming_data, &out); 
+  output_file = fopen("Decrypt_HHWData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    decrypt_data(FALSE, FALSE, &out, output_file);
+  }
+  fclose(output_file);
+  gnutls_free(out.data);
+
+  gnutls_pubkey_encrypt_data(pubkey, 0, &low_hamming_data, &out);
+  output_file = fopen("Decrypt_LHWData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    decrypt_data(FALSE, FALSE, dataHW), output_file;
+  }
+  fclose(output_file);
+  
+  
+  /************************************SCENARIO 1 ends********************************/
+
+
+  /**********************************SCENARIO 2***************************************/
+  /**Low Hamming weight of private exponent of the RSA key, with the some data X******/
+  /***********************************************************************************/
+  //Some data X
+  
+  const gnutls_datum_t some_dataX = {
+    (void *) "udjnahd83uzehda8duwadcba82", 
+	  11
+  };
+
+
+  output_file = fopen("LHWRSAKey_SignData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    rsa_data_sign(privkey, GNUTLS_DIG_SHA256, 0, &some_dataX, TRUE, TRUE, FALSE, output_file); 
+  }
+  fclose(output_file);
+
+  output_file = fopen("HHWRSAKey_SignData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    rsa_data_sign(privkey, GNUTLS_DIG_SHA256, 0, &some_dataX, TRUE, FALSE, TRUE, output_file); 
+  }
+  fclose(output_file);
+
+  gnutls_datum_t hashed_data = rsa_data_sign(privkey, GNUTLS_DIG_SHA256, 0, &some_dataX, FALSE, FALSE, FALSE, NULL);
+  output_file = fopen("HHWRSAKey_SignHashedData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    rsa_hashedata_sign(privkey, &hashed_data, GNUTLS_DIG_SHA256, 0, TRUE, FALSE, output_file);
+  }
+  fclose(output_file);
+
+  output_file = fopen("LHWRSAKey_SignHashedData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    rsa_hashedata_sign(privkey, &hashed_data, GNUTLS_DIG_SHA256, 0, FALSE, TRUE, output_file);
+  }
+  fclose(output_file);
+
+  output_file = fopen("LHWRSAKey_DecryptData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    decrypt_data(privkey, TRUE, FALSE, &some_dataX, output_file);
+  }
+  fclose(output_file);
+
+  output_file = fopen("HHWRSAKey_DecryptData.txt", "w");
+  for(int i=0; i<NUMBER_OF_ITERATIONS; ++i){
+    decrypt_data(privkey, FALSE, TRUE, &some_dataX, output_file);
+  }
+  fclose(output_file);
+  
+  /*********************************SCENARIO 2 ends**************************************/
+  
