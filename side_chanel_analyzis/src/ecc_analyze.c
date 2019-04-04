@@ -67,7 +67,7 @@ long signWorker(gnutls_privkey_t privkey,const gnutls_datum_t* data) {
 
     checkRet(response, "signWorker");
 
-    return response == 0 ? ELAPSED(end, begin) : -1;
+    return ELAPSED(end, begin);
 }
 
 long decryptWorker(gnutls_privkey_t privkey, const gnutls_datum_t* data) {
@@ -84,63 +84,56 @@ long decryptWorker(gnutls_privkey_t privkey, const gnutls_datum_t* data) {
 
     checkRet(response, "decryptWorker");
 
-    return response == 0 ? ELAPSED(end, begin) : -1;
+    return ELAPSED(end, begin);
+}
+
+void iterateSignWorker(gnutls_privkey_t key, const gnutls_datum_t* data, const char* file_name) {
+    long res;
+    FILE* fd = fopen(file_name, "w");
+
+    ITERATIONS(i) {
+        res = signWorker(key, data);
+        fprintf(fd, "%ld\n", res);
+    }
+
+    fclose(fd);
+}
+
+void iterateDecryptWorker(gnutls_privkey_t key, const gnutls_datum_t* data, const char* file_name) {
+    long res;
+    FILE* fd = fopen(file_name, "w");
+
+    ITERATIONS(i) {
+        res = decryptWorker(key, data);
+        fprintf(fd, "%ld\n", res);
+    }
+
+    fclose(fd);
 }
 
 void scenario1(const gnutls_datum_t* low_data, const gnutls_datum_t* high_data, const gnutls_datum_t* rand_data) {
-    long results[100000];
 
     gnutls_privkey_t low_hw_privkey = import_low_hw_private();
     gnutls_privkey_t high_hw_privkey = import_high_hw_private();
     gnutls_privkey_t rand_privkey = import_rand_privkey();
 
-    ITERATIONS(i) {
-        results[i] = signWorker(low_hw_privkey, rand_data);
-    }
-    write_result_to_file("hash_low_hw_private.out", results, NUM_OF_ITERATIONS);
-
-    ITERATIONS(i) {
-        results[i] = signWorker(high_hw_privkey, rand_data);
-    }
-    write_result_to_file("hash_high_hw_private.out", results, NUM_OF_ITERATIONS);
-
-    ITERATIONS(i) {
-        results[i] = signWorker(rand_privkey, low_data);
-    }
-    write_result_to_file("hash_rPrivate_low_data.out", results, NUM_OF_ITERATIONS);
-
-    ITERATIONS(i) {
-        results[i] = signWorker(rand_privkey, high_data);
-    }
-    write_result_to_file("hash_rPrivate_high_data.out", results, NUM_OF_ITERATIONS);
+    iterateSignWorker(low_hw_privkey, rand_data, "hash_low_hw_private.out");
+    iterateSignWorker(high_hw_privkey, rand_data, "hash_high_hw_private.out");
+    iterateSignWorker(rand_privkey, low_data, "hash_rPrivate_low_data.out");
+    iterateSignWorker(rand_privkey, high_data, "hash_rPrivate_high_data.out");
 
 }
 
 void scenario2(const gnutls_datum_t* low_data, const gnutls_datum_t* high_data, const gnutls_datum_t* rand_data) {
-    long results[100000];
 
     gnutls_privkey_t low_hw_privkey = import_low_hw_private();
     gnutls_privkey_t high_hw_privkey = import_high_hw_private();
     gnutls_privkey_t rand_privkey = import_rand_privkey();
 
-    ITERATIONS(i) {
-        results[i] = decryptWorker(low_hw_privkey, rand_data);
-    }
-    write_result_to_file("decrypt_low_hw_private.out", results, NUM_OF_ITERATIONS);
+    iterateDecryptWorker(low_hw_privkey, rand_data, "decrypt_low_hw_private.out");
+    iterateDecryptWorker(high_hw_privkey, rand_data, "decrypt_high_hw_private.out");
+    iterateDecryptWorker(rand_privkey, low_data, "decrypt_rPrivate_low_data.out");
+    iterateDecryptWorker(rand_privkey, high_data, "decrypt_rPrivate_high_data.out");
 
-    ITERATIONS(i) {
-        results[i] = decryptWorker(high_hw_privkey, rand_data);
-    }
-    write_result_to_file("decrypt_high_hw_private.out", results, NUM_OF_ITERATIONS);
-
-    ITERATIONS(i) {
-        results[i] = decryptWorker(rand_privkey, low_data);
-    }
-    write_result_to_file("decrypt_rPrivate_low_data.out", results, NUM_OF_ITERATIONS);
-
-    ITERATIONS(i) {
-        results[i] = decryptWorker(rand_privkey, high_data);
-    }
-    write_result_to_file("decrypt_rPrivate_high_data.out", results, NUM_OF_ITERATIONS);
 }
 

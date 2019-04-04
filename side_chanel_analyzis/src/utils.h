@@ -10,9 +10,6 @@
 
 void read_data_from_file(const char* file_name, char* buffer, size_t buff_size);
 
-void write_result_to_file(const char* file_name, int* buffer, size_t buff_size);
-
-
 gnutls_datum_t importHexData(char * string);
 
 #endif //SIDE_CHANEL_ANALYZIS_UTILS_H
