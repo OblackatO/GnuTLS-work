@@ -5,7 +5,7 @@
 #include <string.h>
 #include "rsa_analyzer.h"
 
-const int NUMBER_OF_ITERATIONS = 10000;
+const int NUMBER_OF_ITERATIONS = 100000;
 
 int main() {
   printf("sizeof(ULONG) = %ld\n", sizeof(long long));
@@ -16,12 +16,16 @@ int main() {
   /***********************SCENARIO 1***********************/
   /**Low and High Hamming weights for the same data.*******/
   /********************************************************/
-  for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
-    doit();
-  }
+  //for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+    // LHHW_OnData();
+  //}
   /********************************************************/
 
   /************Low and High hamming weight of the key******/
+  //for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+    //RSAHHW();
+  //}
+
   for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
     RSALHW();
   }
