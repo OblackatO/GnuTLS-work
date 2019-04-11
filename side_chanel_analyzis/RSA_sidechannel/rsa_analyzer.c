@@ -5,6 +5,8 @@
 #include <string.h>
 #include "rsa_analyzer.h"
 
+const int NUMBER_OF_ITERATIONS = 1000000;
+
 //Check return value
 void checkRet(int ret, char* function) {
  if (ret < 0) {
@@ -13,10 +15,19 @@ void checkRet(int ret, char* function) {
   }
 }
 
+
+/**
+* Writes data to some file.
+*/
 void file_writer(FILE *output_file, long elapsed){
     fprintf(output_file,"%lu\n", elapsed);
 }
 
+
+/**
+ * Imports Hex data, needed to manually import RSA keys.
+ *
+*/
 gnutls_datum_t importHexData(char * string) 
 {
     unsigned int len = (unsigned int)strlen(string);
@@ -33,6 +44,9 @@ gnutls_datum_t importHexData(char * string)
     return result;
 }
 
+/**
+ * Prints data imported by:gnutls_datum_t importHexData(char * string)
+*/ 
 static void print_hex_datum(FILE * outfile, gnutls_datum_t * dat)
 {
 	for (unsigned int j = 0; j < dat->size; j++) {
@@ -46,21 +60,7 @@ const gnutls_datum_t raw_data = {
 	11
 };
 
-static char pem1_cert[] =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIICHjCCAYmgAwIBAgIERiYdNzALBgkqhkiG9w0BAQUwGTEXMBUGA1UEAxMOR251\n"
-    "VExTIHRlc3QgQ0EwHhcNMDcwNDE4MTMyOTI3WhcNMDgwNDE3MTMyOTI3WjAdMRsw\n"
-    "GQYDVQQDExJHbnVUTFMgdGVzdCBjbGllbnQwgZwwCwYJKoZIhvcNAQEBA4GMADCB\n"
-    "iAKBgLtmQ/Xyxde2jMzF3/WIO7HJS2oOoa0gUEAIgKFPXKPQ+GzP5jz37AR2ExeL\n"
-    "ZIkiW8DdU3w77XwEu4C5KL6Om8aOoKUSy/VXHqLnu7czSZ/ju0quak1o/8kR4jKN\n"
-    "zj2AC41179gAgY8oBAOgIo1hBAf6tjd9IQdJ0glhaZiQo1ipAgMBAAGjdjB0MAwG\n"
-    "A1UdEwEB/wQCMAAwEwYDVR0lBAwwCgYIKwYBBQUHAwIwDwYDVR0PAQH/BAUDAweg\n"
-    "ADAdBgNVHQ4EFgQUTLkKm/odNON+3svSBxX+odrLaJEwHwYDVR0jBBgwFoAU6Twc\n"
-    "+62SbuYGpFYsouHAUyfI8pUwCwYJKoZIhvcNAQEFA4GBALujmBJVZnvaTXr9cFRJ\n"
-    "jpfc/3X7sLUsMvumcDE01ls/cG5mIatmiyEU9qI3jbgUf82z23ON/acwJf875D3/\n"
-    "U7jyOsBJ44SEQITbin2yUeJMIm1tievvdNXBDfW95AM507ShzP12sfiJkJfjjdhy\n"
-    "dc8Siq5JojruiMizAf0pA7in\n" "-----END CERTIFICATE-----\n";
-
+//Some RSA key, 1024bits.
 static char pem1_key[] =
     "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIICXAIBAAKBgQC7ZkP18sXXtozMxd/1iDuxyUtqDqGtIFBACIChT1yj0Phsz+Y8\n"
@@ -78,6 +78,25 @@ static char pem1_key[] =
     "sWZGfbnU3ryjvkb6YuFjgtzbZDZHWQCo8/cOtOBmPdk=\n"
     "-----END RSA PRIVATE KEY-----\n";
 
+//certificate of pem1_key[] above   
+static char pem1_cert[] =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIICHjCCAYmgAwIBAgIERiYdNzALBgkqhkiG9w0BAQUwGTEXMBUGA1UEAxMOR251\n"
+    "VExTIHRlc3QgQ0EwHhcNMDcwNDE4MTMyOTI3WhcNMDgwNDE3MTMyOTI3WjAdMRsw\n"
+    "GQYDVQQDExJHbnVUTFMgdGVzdCBjbGllbnQwgZwwCwYJKoZIhvcNAQEBA4GMADCB\n"
+    "iAKBgLtmQ/Xyxde2jMzF3/WIO7HJS2oOoa0gUEAIgKFPXKPQ+GzP5jz37AR2ExeL\n"
+    "ZIkiW8DdU3w77XwEu4C5KL6Om8aOoKUSy/VXHqLnu7czSZ/ju0quak1o/8kR4jKN\n"
+    "zj2AC41179gAgY8oBAOgIo1hBAf6tjd9IQdJ0glhaZiQo1ipAgMBAAGjdjB0MAwG\n"
+    "A1UdEwEB/wQCMAAwEwYDVR0lBAwwCgYIKwYBBQUHAwIwDwYDVR0PAQH/BAUDAweg\n"
+    "ADAdBgNVHQ4EFgQUTLkKm/odNON+3svSBxX+odrLaJEwHwYDVR0jBBgwFoAU6Twc\n"
+    "+62SbuYGpFYsouHAUyfI8pUwCwYJKoZIhvcNAQEFA4GBALujmBJVZnvaTXr9cFRJ\n"
+    "jpfc/3X7sLUsMvumcDE01ls/cG5mIatmiyEU9qI3jbgUf82z23ON/acwJf875D3/\n"
+    "U7jyOsBJ44SEQITbin2yUeJMIm1tievvdNXBDfW95AM507ShzP12sfiJkJfjjdhy\n"
+    "dc8Siq5JojruiMizAf0pA7in\n" "-----END CERTIFICATE-----\n";
+
+
+//******************************************//
+/*Conversion of key to gnutls struct*/
 const gnutls_datum_t cert_dat[] = {
 	{(void *) pem1_cert, sizeof(pem1_cert)}
 };
@@ -85,7 +104,10 @@ const gnutls_datum_t cert_dat[] = {
 const gnutls_datum_t key_dat[] = {
 	{(void *) pem1_key, sizeof(pem1_key)}
 };
+//*******************************************//
 
+
+//RSA key with High-Hamming Weight
 static char pem1_HHWkey[] =
     "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIHcAgEAAkEApunQnUVmIVpE12tOzHy5Mm3blrR/f/cpuyiOU7I0I6xMH4hJSalG\n"
@@ -96,6 +118,7 @@ static char pem1_HHWkey[] =
     "-----END RSA PRIVATE KEY-----\n";
 
 
+//RSA key with Low-Hamming Weight
 static char pem1_LHWkey[] =
     "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIHcAgEAAkEA6AFcaP3z7zu6N/DKGgyclY80LZ1gNcQ4OYLuHgJbgXABQ83uq33r\n"
@@ -105,7 +128,8 @@ static char pem1_LHWkey[] =
     "3XuNR0EwXdZnx7k11VSbboEtHAXr9QIBAAIBAAIBAA==\n"
     "-----END RSA PRIVATE KEY-----\n";
 
-
+//*************************************************//
+/*Conversion of the two keys above to gnutls struct*/
 const gnutls_datum_t HHWkey_dat[] = {
 	{(void *) pem1_HHWkey, sizeof(pem1_HHWkey)}
 };
@@ -113,6 +137,8 @@ const gnutls_datum_t HHWkey_dat[] = {
 const gnutls_datum_t LHWkey_dat[] = {
 	{(void *) pem1_LHWkey, sizeof(pem1_LHWkey)}
 };
+//*************************************************//
+
 
 /* sha1 hash of "hello" string */
 const gnutls_datum_t hash_data = {
@@ -122,6 +148,14 @@ const gnutls_datum_t hash_data = {
 	20
 };
 
+
+/*
+* RSA key with Low hamming weight, with the following functions:
+*   [>] gnutls_privkey_sign_data()
+*   [>] gnutls_privkey_sign_hash
+*
+*   Scenario: Low Hamming weight key with some data.
+*/
 void RSALHW(){
     
     gnutls_x509_privkey_t key;
@@ -153,29 +187,42 @@ void RSALHW(){
         /*********************************************************************/
         clock_t begin, end;
         gnutls_datum_t signature;
+        long elapsed;
         FILE *output_file = fopen("LHWRSAKey_SignData.txt", "a");
-        begin = clock();
-        if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
-            printf("[>]Error while signing data.");
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
+                printf("[>]Error while signing data.");
+            }
+            end = clock();
+            elapsed = end - begin;
+            file_writer(output_file, elapsed);
         };
-        end = clock();
-        long elapsed = end - begin;
-        file_writer(output_file, elapsed);
         fclose(output_file);
 
         output_file = fopen("LHWRSAKey_SignHashedData.txt", "a");
-        begin = clock();
-        if(gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
-            printf("[>]Error while signing hashed data.");
-        };
-        end = clock();
-        elapsed = end - begin;
-        file_writer(output_file, elapsed);
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            if(gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
+                printf("[>]Error while signing hashed data.");
+            };
+            end = clock();
+            elapsed = end - begin;
+            file_writer(output_file, elapsed);
+        }
         fclose(output_file);
         /***********************************************************************************/
     }
 }
 
+
+/*
+* RSA key with High hamming weight, with the following functions:
+*   [>] gnutls_privkey_sign_data()
+*   [>] gnutls_privkey_sign_hash
+*
+*   Scenario: High Hamming weight key with some data.
+*/
 void RSAHHW(){
     
     gnutls_x509_privkey_t key;
@@ -183,6 +230,7 @@ void RSAHHW(){
 	gnutls_datum_t out, out2;
 	int ret;
 	size_t i;
+    long elapsed;
 
 	for (i = 0; i < sizeof(HHWkey_dat) / sizeof(HHWkey_dat[0]); i++) {
         
@@ -208,29 +256,45 @@ void RSAHHW(){
         clock_t begin, end;
         gnutls_datum_t signature;
         FILE *output_file = fopen("HHWRSAKey_SignData.txt", "a");
-        begin = clock();
-        if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
-            printf("[>]Error while signing data.");
-        };
-        end = clock();
-        long elapsed = end - begin;
-        file_writer(output_file, elapsed);
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
+                printf("[>]Error while signing data.");
+            };
+            end = clock();
+            elapsed = end - begin;
+            file_writer(output_file, elapsed);
+        }
         fclose(output_file);
 
         output_file = fopen("HHWRSAKey_SignHashedData.txt", "a");
-        begin = clock();
-        if(gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
-            printf("[>]Error while signing hashed data.");
-        };
-        end = clock();
-        elapsed = end - begin;
-        file_writer(output_file, elapsed);
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            if(gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
+                printf("[>]Error while signing hashed data.");
+            };
+            end = clock();
+            elapsed = end - begin;
+            file_writer(output_file, elapsed);
+        }
         fclose(output_file);
         /***********************************************************************************/
     }
+
+    gnutls_x509_privkey_deinit(key);
+	gnutls_privkey_deinit(privkey);
 }
 
 
+/*
+* Data with Low hamming weight &&
+* Data with high hamming weight, with the following functions:
+*
+*   [>] gnutls_privkey_sign_data()
+*   [>] gnutls_privkey_sign_hash
+*
+*   Scenario: High&&Low Hamming weight data with some RSA key.
+*/
 void LHHW_OnData()
 {
 	gnutls_x509_privkey_t key;
@@ -297,43 +361,52 @@ void LHHW_OnData()
 
         clock_t begin, end;
         gnutls_datum_t signature;
+        long elapsed;
         FILE *output_file = fopen("LHWData_DataSign_keyX.txt", "a");
-        begin = clock();
-        if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &low_hamming_data, &signature) < 0){
-            printf("[>]Error while signing data.");
-        };
-        end = clock();
-        long elapsed = end - begin;
-        file_writer(output_file, elapsed);
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &low_hamming_data, &signature) < 0){
+                printf("[>]Error while signing data.");
+            };
+            end = clock();
+            elapsed = end - begin;
+            file_writer(output_file, elapsed);
+        }
         fclose(output_file);
 
         
         output_file = fopen("HHWData_DataSign_keyX.txt", "a");
-        begin = clock();
-        if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &high_hamming_data, &signature) < 0){
-            printf("[>]Error while signing data.");
-        };
-        end = clock();
-        elapsed = end - begin;
-        file_writer(output_file, elapsed);
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &high_hamming_data, &signature) < 0){
+                printf("[>]Error while signing data.");
+            };
+            end = clock();
+            elapsed = end - begin;
+            file_writer(output_file, elapsed);
+        }
         fclose(output_file);
         
         output_file = fopen("LHWData_HashedDataSign_keyX.txt", "a");
-        begin = clock();
-        int ret = gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &low_hamming_data, &signature);
-        end = clock();
-        elapsed = end - begin;
-        checkRet(ret, "error signing data.");
-        file_writer(output_file, elapsed);
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            int ret = gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &low_hamming_data, &signature);
+            end = clock();
+            elapsed = end - begin;
+            checkRet(ret, "error signing data.");
+            file_writer(output_file, elapsed);
+        }
         fclose(output_file);
 
         output_file = fopen("HHWData_HashedDataSign_keyX.txt", "a");
-        begin = clock();
-        ret = gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &high_hamming_data, &signature);
-        end = clock();
-        elapsed = end - begin;
-        checkRet(ret, "error signing data.");
-        file_writer(output_file, elapsed);
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            ret = gnutls_privkey_sign_hash(privkey, GNUTLS_DIG_SHA256, 0, &high_hamming_data, &signature);
+            end = clock();
+            elapsed = end - begin;
+            checkRet(ret, "error signing data.");
+            file_writer(output_file, elapsed);
+        }
         fclose(output_file);
         return;
     }

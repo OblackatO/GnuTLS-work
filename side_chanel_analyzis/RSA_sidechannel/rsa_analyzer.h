@@ -10,7 +10,7 @@ void file_writer(FILE *output_file, long elapsed);
 
 gnutls_datum_t importHexData(char * string);
 
-void  LHHW_OnData();
+void LHHW_OnData();
 
 void RSAHHW();
 
