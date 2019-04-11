@@ -343,7 +343,7 @@ void LHHW_OnData()
 			checkRet(ret, "gnutls_x509_pubkey_import\n");
 
 
-		/*********************************************************/
+	    /*********************************************************/
         void * dataLW = malloc(20); 
         memset(dataLW, 0, 20);
         memset(dataLW, 0x80, 1);
@@ -408,14 +408,14 @@ void LHHW_OnData()
             file_writer(output_file, elapsed);
         }
         fclose(output_file);
-        return;
-    }
         /*********************************************************/
+    }
+        
 
-		gnutls_x509_privkey_deinit(key);
-		gnutls_x509_crt_deinit(crt);
-		gnutls_privkey_deinit(privkey);
-		gnutls_pubkey_deinit(pubkey);
+	gnutls_x509_privkey_deinit(key);
+	gnutls_x509_crt_deinit(crt);
+	gnutls_privkey_deinit(privkey);
+	gnutls_pubkey_deinit(pubkey);
 }
 
 
