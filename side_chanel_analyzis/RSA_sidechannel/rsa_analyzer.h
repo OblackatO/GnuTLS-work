@@ -16,4 +16,8 @@ void RSAHHW();
 
 void RSALHW();
 
+void encrypt_data();
+
+void decrypt_data(gnutls_datum_t encrypted_data, char *file_name);
+
 #endif //RSA_ANALYZER_H

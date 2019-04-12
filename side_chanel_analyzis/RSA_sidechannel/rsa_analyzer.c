@@ -189,6 +189,7 @@ void RSALHW(){
         gnutls_datum_t signature;
         long elapsed;
         FILE *output_file = fopen("LHWRSAKey_SignData.txt", "a");
+        
         for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
             begin = clock();
             if(gnutls_privkey_sign_data(privkey, GNUTLS_DIG_SHA256, 0, &hash_data, &signature) < 0){
@@ -199,7 +200,8 @@ void RSALHW(){
             file_writer(output_file, elapsed);
         };
         fclose(output_file);
-
+        
+       
         output_file = fopen("LHWRSAKey_SignHashedData.txt", "a");
         for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
             begin = clock();
@@ -304,6 +306,24 @@ void LHHW_OnData()
 	int ret;
 	size_t i;
 
+
+    //data with low hamming weight
+    void * dataLW = malloc(20); 
+    memset(dataLW, 0, 20);
+    memset(dataLW, 0x80, 1);
+    const gnutls_datum_t low_hamming_data = {
+	    (void *) dataLW, 
+	    20
+    };
+
+    //data with high hamming weight
+    void * dataHW = malloc(20); 
+    memset(dataHW,0xFF, 20);
+    const gnutls_datum_t high_hamming_data = {
+        (void *) dataHW, 
+	    20
+    };
+
 	for (i = 0; i < sizeof(key_dat) / sizeof(key_dat[0]); i++) {
 		
         ret = gnutls_x509_privkey_init(&key);
@@ -344,21 +364,6 @@ void LHHW_OnData()
 
 
 	    /*********************************************************/
-        void * dataLW = malloc(20); 
-        memset(dataLW, 0, 20);
-        memset(dataLW, 0x80, 1);
-        const gnutls_datum_t low_hamming_data = {
-	        (void *) dataLW, 
-	        20
-        };
-
-        void * dataHW = malloc(20); 
-        memset(dataHW,0xFF, 20);
-        const gnutls_datum_t high_hamming_data = {
-            (void *) dataHW, 
-	        20
-        };
-
         clock_t begin, end;
         gnutls_datum_t signature;
         long elapsed;
@@ -408,10 +413,11 @@ void LHHW_OnData()
             file_writer(output_file, elapsed);
         }
         fclose(output_file);
+
+
         /*********************************************************/
     }
         
-
 	gnutls_x509_privkey_deinit(key);
 	gnutls_x509_crt_deinit(crt);
 	gnutls_privkey_deinit(privkey);
@@ -419,5 +425,117 @@ void LHHW_OnData()
 }
 
 
+void encrypt_data(){
+    
+    gnutls_pubkey_t pubkey;
+    gnutls_datum_t out, out1, out2;
+    gnutls_x509_crt_t crt;
+    int ret;
+    size_t i;
 
+    void * dataLW = malloc(20); 
+    memset(dataLW, 0, 20);
+    memset(dataLW, 0x80, 1);
+    const gnutls_datum_t low_hamming_data = {
+	    (void *) dataLW, 
+	    20
+    };
 
+    void * dataHW = malloc(20); 
+    memset(dataHW,0xFF, 20);
+    const gnutls_datum_t high_hamming_data = {
+        (void *) dataHW, 
+	    20
+    };
+
+    for (i = 0; i < sizeof(key_dat) / sizeof(key_dat[0]); i++) { 
+        
+        //import public key within certificate
+        ret = gnutls_pubkey_init(&pubkey);
+		if (ret < 0)
+		    checkRet(ret, "gnutls_pubkey_init\n");
+
+        ret = gnutls_x509_crt_init(&crt);
+		if (ret < 0)
+			checkRet(ret, "gnutls_x509_crt_init\n");
+
+		ret = gnutls_x509_crt_import(crt, &cert_dat[i], GNUTLS_X509_FMT_PEM);
+		if (ret < 0)
+			checkRet(ret, "gnutls_x509_crt_import\n");
+
+		ret = gnutls_pubkey_import_x509(pubkey, crt, 0);
+		if (ret < 0)
+			checkRet(ret, "gnutls_x509_pubkey_import\n");
+
+        //Encrypts data with high hamming weight
+        ret = gnutls_pubkey_encrypt_data(pubkey, 0, &high_hamming_data, &out);
+		if (ret < 0)
+			checkRet(ret, "gnutls_pubkey_encrypt_data with high hamming weight\n");
+
+        //Encrypts data with low hamming weight
+        ret = gnutls_pubkey_encrypt_data(pubkey, 0, &low_hamming_data, &out1);
+		if (ret < 0)
+			checkRet(ret, "gnutls_pubkey_encrypt_data with low hamming weight\n");
+
+        printf("Encrypted data:\n");
+        print_hex_datum(stdout, &out);
+
+        printf("Decrypting data with low hamming weight.\n");
+        decrypt_data(out1, "Decrypt_LHWData_SomeRSA_Key.txt");
+
+        printf("Decrypting data with high hamming weight.\n");
+        decrypt_data(out, "Decrypt_HHWData_SomeRSA_Key.txt");
+    }
+
+    gnutls_pubkey_deinit(pubkey);
+    gnutls_x509_crt_deinit(crt);
+}
+
+void decrypt_data(gnutls_datum_t encrypted_data, char *file_name){
+
+    gnutls_x509_privkey_t key;
+    gnutls_privkey_t privkey;
+	gnutls_datum_t out2;
+    int ret;
+    size_t i;
+
+    for (i = 0; i < sizeof(key_dat) / sizeof(key_dat[0]); i++) { 
+
+        //Import private key.
+        ret = gnutls_x509_privkey_init(&key);
+	    if (ret < 0)
+		    checkRet(ret, "gnutls_x509_privkey_init\n");
+
+        ret = gnutls_x509_privkey_import(key, &key_dat[i], GNUTLS_X509_FMT_PEM);
+	    if (ret < 0)
+		    checkRet(ret, "gnutls_x509_privkey_import\n");
+
+        ret = gnutls_privkey_init(&privkey);
+		if (ret < 0)
+			checkRet(ret, "gnutls_pubkey_init\n");
+
+		ret = gnutls_privkey_import_x509(privkey, key, 0);
+		if (ret < 0)
+			checkRet(ret, "gnutls_privkey_import_x509\n");
+
+        clock_t begin, end;
+        long elapsed;
+        FILE *output_file = fopen(file_name, "a");
+        for(int i=0; i<NUMBER_OF_ITERATIONS; i++){
+            begin = clock();
+            ret = gnutls_privkey_decrypt_data(privkey, 0, &encrypted_data, &out2);
+            end = clock();
+            if (ret < 0)
+		        checkRet(ret, "gnutls_privkey_decrypt_data\n");
+            elapsed = end - begin;
+            file_writer(output_file, elapsed);
+        }
+        fclose(output_file);
+
+        printf("Decrypted data:\n");
+        print_hex_datum(stdout, &out2); printf("\n");
+    }
+
+    gnutls_x509_privkey_deinit(key);
+	gnutls_privkey_deinit(privkey);
+}

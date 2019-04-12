@@ -9,12 +9,13 @@
 int main() 
 {
   printf("sizeof(ULONG) = %ld\n", sizeof(long long));
-	printf("CLOCKS_PER_SEC = %ld\n", CLOCKS_PER_SEC);
+
 	printf("######################################\n");
 
-  RSALHW()
-  RSAHHW();
-  LHHW_OnData();
+  //RSALHW();
+  //RSAHHW();
+  //LHHW_OnData();
+  encrypt_data();
 
   return 0;
 }
